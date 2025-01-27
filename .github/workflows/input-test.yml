@@ -14,7 +14,7 @@ on:
         type: 'string'
         default: 'false'
   schedule:
-    - cron: '10 04 * * 1' # Every Monday at 9:40 AM IST
+    - cron: '25 04 * * 1' # Every Monday at 9:40 AM IST
 
 jobs:
   log-inputs:
