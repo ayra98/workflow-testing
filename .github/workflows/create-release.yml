@@ -18,6 +18,8 @@ on:
         required: false
         type: 'string'
         default: false
+  schedule:
+    - cron: '40 03 * * 1' # Every Monday at 9:02 AM IST
 
 jobs:
   release-date-check:
@@ -25,6 +27,15 @@ jobs:
     outputs:
       release-date: ${{steps.release-date-checker.outputs.release-date}}
     steps:
+      - name: Debug Inputs for Release Date Check
+        run: |
+          echo "Debugging Inputs for Release Date Check:"
+          echo "GITHUB_EVENT_NAME=${{ github.event_name }}"
+          echo "GITHUB_REF_NAME=${{ github.ref_name }}"
+          echo "GITHUB_REF=${{ github.ref }}"
+          echo "INPUTS: Create_Branch=${{ inputs.Create_Branch }}, BUILD_BUSINESS=${{ inputs.BUILD_BUSINESS }}, HOTFIX=${{ inputs.HOTFIX }}"
+          echo "SCHEDULED_EVENT=${{ github.event.schedule }}"
+
       - name: Run ReleaseDate Check
         id: release-date-checker
         run: |
@@ -40,7 +51,7 @@ jobs:
             echo "today's not a release date, Exiting Workflow"
             exit 1
           fi
-          
+
   create-release:
     needs: release-date-check
     if: ${{ needs.release-date-check.outputs.release-date == 'true' && (inputs.Create_Branch && github.event_name == 'workflow_dispatch') || github.event_name == 'schedule' }}
@@ -59,6 +70,14 @@ jobs:
       BRANCH: ${{ steps.set-outputs.outputs.BRANCH }}
       BUILD_BUSINESS: ${{ steps.set-outputs.outputs.BUILD_BUSINESS }}
     steps:
+      - name: Debug Inputs for Build Dogfood
+        run: |
+          echo "Debugging Inputs for Build Dogfood:"
+          echo "HOTFIX=${{ inputs.HOTFIX }}"
+          echo "BRANCH=${{ env.BRANCH }}"
+          echo "BUILD_BUSINESS=${{ env.BUILD_BUSINESS }}"
+          echo "INPUT BUILD_BUSINESS=${{ github.event.inputs.BUILD_BUSINESS }}"
+
       - name: Set Hotfix Env
         run: |
           echo "HOTFIX=${{ inputs.HOTFIX }}" >> $GITHUB_ENV
@@ -95,27 +114,34 @@ jobs:
         run: . fetch_config secret/non-prod/clients/multi-country-builds  && cd scripts && ./run.sh
 
   build-release:
-   if: ${{ (always() && contains(join(needs.*.result, ','), 'success')) || github.event_name == 'workflow_dispatch' }}
-   needs: [create-release, build-dogfood]
-   runs-on: [hs-releng-action-runner]
-   env:
-     BUILD_ENV: prod
-     BUILD_TYPE: release
-     UPLOAD_TO_PLAYSTORE: true
-     FIRESTORE_ENABLED: false
-   steps:
-    - name: Set Hotfix Env
-      run: |
-        echo "HOTFIX=${{ inputs.HOTFIX }}" >> $GITHUB_ENV
-    - name: Set environment name
-      run: |
-        echo "BRANCH=${{ needs.build-dogfood.outputs.BRANCH }}" >> $GITHUB_ENV
-        echo "BUILD_BUSINESS=${{ needs.build-dogfood.outputs.BUILD_BUSINESS }}" >> $GITHUB_ENV
+    if: ${{ (always() && contains(join(needs.*.result, ','), 'success')) || github.event_name == 'workflow_dispatch' }}
+    needs: [create-release, build-dogfood]
+    runs-on: [hs-releng-action-runner]
+    env:
+      BUILD_ENV: prod
+      BUILD_TYPE: release
+      UPLOAD_TO_PLAYSTORE: true
+      FIRESTORE_ENABLED: false
+    steps:
+      - name: Debug Inputs for Build Release
+        run: |
+          echo "Debugging Inputs for Build Release:"
+          echo "HOTFIX=${{ inputs.HOTFIX }}"
+          echo "BRANCH=${{ needs.build-dogfood.outputs.BRANCH }}"
+          echo "BUILD_BUSINESS=${{ needs.build-dogfood.outputs.BUILD_BUSINESS }}"
 
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-      with:
-        ref: ${{ env.BRANCH }}
+      - name: Set Hotfix Env
+        run: |
+          echo "HOTFIX=${{ inputs.HOTFIX }}" >> $GITHUB_ENV
+      - name: Set environment name
+        run: |
+          echo "BRANCH=${{ needs.build-dogfood.outputs.BRANCH }}" >> $GITHUB_ENV
+          echo "BUILD_BUSINESS=${{ needs.build-dogfood.outputs.BUILD_BUSINESS }}" >> $GITHUB_ENV
 
-    - name: Start Multibuild pipeline for release build
-      run: . fetch_config secret/non-prod/clients/multi-country-builds  && cd scripts && ./run.sh
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.BRANCH }}
+
+      - name: Start Multibuild pipeline for release build
+        run: . fetch_config secret/non-prod/clients/multi-country-builds  && cd scripts && ./run.sh
