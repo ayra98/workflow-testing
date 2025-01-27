@@ -19,7 +19,7 @@ on:
         type: 'string'
         default: false
   schedule:
-    - cron: '40 03 * * 1' # Every Monday at 9:02 AM IST
+    - cron: '00 04 * * 1' # Every Monday at 9:02 AM IST
 
 jobs:
   release-date-check:
@@ -40,7 +40,7 @@ jobs:
         id: release-date-checker
         run: |
           baseDate="2023-03-27"
-          gapBetweenReleases=7 # days -> Signifying weekly-Release-cadence
+          gapBetweenReleases=1 # days -> Signifying weekly-Release-cadence
           today=$(date -u +%s)
           start=$(date -u -d "$baseDate" +%s)
           diff=$(( (today - start) / 86400 ))
@@ -55,7 +55,33 @@ jobs:
   create-release:
     needs: release-date-check
     if: ${{ needs.release-date-check.outputs.release-date == 'true' && (inputs.Create_Branch && github.event_name == 'workflow_dispatch') || github.event_name == 'schedule' }}
-    uses: hotstar/hotstar-github-action-workflows/.github/workflows/hotstar-client-release.yml@main
+    runs-on: [hs-releng-action-runner]
+    outputs:
+      BRANCHNAME ${{ steps.branch.outputs.BRANCHNAME }}
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+    - name: Initialize mandatory git config
+      run: |
+       git config user.name "Release Engineering"
+       git config user.email releaseengineering.svc@hotstar.com
+    - name: Create release branch
+      run: |
+        BRANCH_NAME="release-$(date +%y-%m-%d)"
+        if git ls-remote --exit-code --heads origin $BRANCH_NAME; then
+          echo "Branch $BRANCH_NAME already exists on remote. Pulling latest changes..."
+          git fetch origin $BRANCH_NAME
+          git checkout $BRANCH_NAME
+          git pull origin $BRANCH_NAME
+        else
+          echo "Creating a new branch $BRANCH_NAME"
+          git checkout -b $BRANCH_NAME
+
+    - name: Push new branch
+      run: git push origin release-`date +%y-%m-%d`
+    - name: Getting branch name  
+      id: branch
+      run: echo "BRANCHNAME=release-`date +%y-%m-%d`" >> $GITHUB_OUTPUT
 
   build-dogfood:
     if: ${{ ( (always() && contains(join(needs.*.result, ','), 'success')) || github.event_name == 'workflow_dispatch') }}
