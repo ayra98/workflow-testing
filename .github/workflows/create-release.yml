@@ -52,19 +52,21 @@ jobs:
             exit 1
           fi
 
-  create-release:
-    needs: release-date-check
-    if: ${{ needs.release-date-check.outputs.release-date == 'true' && (inputs.Create_Branch && github.event_name == 'workflow_dispatch') || github.event_name == 'schedule' }}
-    runs-on: [hs-releng-action-runner]
-    outputs:
-      BRANCHNAME ${{ steps.branch.outputs.BRANCHNAME }}
-    steps:
+create-release:
+  needs: release-date-check
+  if: ${{ needs.release-date-check.outputs.release-date == 'true' && (inputs.Create_Branch && github.event_name == 'workflow_dispatch') || github.event_name == 'schedule' }}
+  runs-on: [hs-releng-action-runner]
+  outputs:
+    BRANCHNAME: ${{ steps.branch.outputs.BRANCHNAME }}
+  steps:
     - name: Check out code
       uses: actions/checkout@v4
+
     - name: Initialize mandatory git config
       run: |
-       git config user.name "Release Engineering"
-       git config user.email releaseengineering.svc@hotstar.com
+        git config user.name "Release Engineering"
+        git config user.email releaseengineering.svc@hotstar.com
+
     - name: Create release branch
       run: |
         BRANCH_NAME="release-$(date +%y-%m-%d)"
@@ -76,12 +78,14 @@ jobs:
         else
           echo "Creating a new branch $BRANCH_NAME"
           git checkout -b $BRANCH_NAME
+        fi
 
     - name: Push new branch
-      run: git push origin release-`date +%y-%m-%d`
-    - name: Getting branch name  
+      run: git push origin $BRANCH_NAME
+
+    - name: Getting branch name
       id: branch
-      run: echo "BRANCHNAME=release-`date +%y-%m-%d`" >> $GITHUB_OUTPUT
+      run: echo "BRANCHNAME=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
   build-dogfood:
     if: ${{ ( (always() && contains(join(needs.*.result, ','), 'success')) || github.event_name == 'workflow_dispatch') }}
