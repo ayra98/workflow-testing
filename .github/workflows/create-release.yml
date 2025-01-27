@@ -1,0 +1,121 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      Create_Branch:
+        description: 'Create Release branch?'
+        required: false
+        type: boolean
+        default: false
+      BUILD_BUSINESS:
+        description: 'Build Business one of In Mea Ph Sea Hsi'
+        required: false
+        type: 'string'
+        default: 'In Mea Ph Sea Hsi'
+      HOTFIX:
+        description: 'Hotfix Build Generation? Only check when hotfix build generation is requried'
+        required: false
+        type: 'string'
+        default: false
+
+jobs:
+  release-date-check:
+    runs-on: [hs-releng-action-runner]
+    outputs:
+      release-date: ${{steps.release-date-checker.outputs.release-date}}
+    steps:
+      - name: Run ReleaseDate Check
+        id: release-date-checker
+        run: |
+          baseDate="2023-03-27"
+          gapBetweenReleases=7 # days -> Signifying weekly-Release-cadence
+          today=$(date -u +%s)
+          start=$(date -u -d "$baseDate" +%s)
+          diff=$(( (today - start) / 86400 ))
+          if (( diff % $gapBetweenReleases == 0 )); then
+            echo "release-date=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "release-date=false" >> "$GITHUB_OUTPUT"
+            echo "today's not a release date, Exiting Workflow"
+            exit 1
+          fi
+          
+  create-release:
+    needs: release-date-check
+    if: ${{ needs.release-date-check.outputs.release-date == 'true' && (inputs.Create_Branch && github.event_name == 'workflow_dispatch') || github.event_name == 'schedule' }}
+    uses: hotstar/hotstar-github-action-workflows/.github/workflows/hotstar-client-release.yml@main
+
+  build-dogfood:
+    if: ${{ ( (always() && contains(join(needs.*.result, ','), 'success')) || github.event_name == 'workflow_dispatch') }}
+    needs: create-release
+    runs-on: [hs-releng-action-runner]
+    env:
+      BUILD_ENV: prod
+      BUILD_TYPE: dogfood
+      UPLOAD_TO_PLAYSTORE: false
+      FIRESTORE_ENABLED: false
+    outputs:
+      BRANCH: ${{ steps.set-outputs.outputs.BRANCH }}
+      BUILD_BUSINESS: ${{ steps.set-outputs.outputs.BUILD_BUSINESS }}
+    steps:
+      - name: Set Hotfix Env
+        run: |
+          echo "HOTFIX=${{ inputs.HOTFIX }}" >> $GITHUB_ENV
+      - name: Set environment name
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          echo "BRANCH=${{ needs.create-release.outputs.BRANCHNAME }}" >> $GITHUB_ENV
+          echo "BUILD_BUSINESS=In Mea Ph Sea Hsi" >> $GITHUB_ENV
+
+      - name: Set environment name from UI
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.Create_Branch }}
+        run: |
+          echo "BRANCH=${{ needs.create-release.outputs.BRANCHNAME }}" >> $GITHUB_ENV
+          echo "BUILD_BUSINESS=${{ github.event.inputs.BUILD_BUSINESS }}" >> $GITHUB_ENV
+
+      - name: Set environment name from UI
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.Create_Branch }}
+        run: |
+          echo "BRANCH=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+          echo "BUILD_BUSINESS=${{ github.event.inputs.BUILD_BUSINESS }}" >> $GITHUB_ENV
+
+      - name: Set outputs
+        id: set-outputs
+        run: |
+          echo "BRANCH=$BRANCH" >> $GITHUB_OUTPUT
+          echo "BUILD_BUSINESS=$BUILD_BUSINESS" >> $GITHUB_OUTPUT
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.BRANCH }}
+
+      - name: Start pipeline for dogfood build
+        run: . fetch_config secret/non-prod/clients/multi-country-builds  && cd scripts && ./run.sh
+
+  build-release:
+   if: ${{ (always() && contains(join(needs.*.result, ','), 'success')) || github.event_name == 'workflow_dispatch' }}
+   needs: [create-release, build-dogfood]
+   runs-on: [hs-releng-action-runner]
+   env:
+     BUILD_ENV: prod
+     BUILD_TYPE: release
+     UPLOAD_TO_PLAYSTORE: true
+     FIRESTORE_ENABLED: false
+   steps:
+    - name: Set Hotfix Env
+      run: |
+        echo "HOTFIX=${{ inputs.HOTFIX }}" >> $GITHUB_ENV
+    - name: Set environment name
+      run: |
+        echo "BRANCH=${{ needs.build-dogfood.outputs.BRANCH }}" >> $GITHUB_ENV
+        echo "BUILD_BUSINESS=${{ needs.build-dogfood.outputs.BUILD_BUSINESS }}" >> $GITHUB_ENV
+
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ env.BRANCH }}
+
+    - name: Start Multibuild pipeline for release build
+      run: . fetch_config secret/non-prod/clients/multi-country-builds  && cd scripts && ./run.sh
