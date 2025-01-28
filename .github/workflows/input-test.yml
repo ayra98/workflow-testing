@@ -14,18 +14,27 @@ on:
         type: 'string'
         default: 'false'
   schedule:
-    - cron: '55 02 * * *' # Every day at 8:25 AM IST
+    - cron: '55 04 * * *' # Every day at 10:25 AM IST
 
 jobs:
   log-inputs:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
       - name: Log Inputs
         run: |
           echo "Logging Inputs:"
           echo "Event Name: ${{ github.event_name }}"
           echo "BUILD_BUSINESS (input): ${{ github.event.inputs.BUILD_BUSINESS }}"
           echo "HOTFIX (input): ${{ github.event.inputs.HOTFIX }}"
-      
+
+      - name: Print Working Directory
+        run: pwd
+
+      - name: List Files
+        run: ls -R
+
       - name: Start Multibuild pipeline for release build
-        run: cd scripts && ./run.sh
+        run: cd ./scripts && ./run.sh
