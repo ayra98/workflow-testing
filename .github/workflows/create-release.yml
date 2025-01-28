@@ -19,7 +19,7 @@ on:
         type: 'string'
         default: false
   schedule:
-    - cron: '00 04 * * 1' # Every Monday at 9:02 AM IST
+    - cron: '30 03 * * *' # Every Monday at 9:02 AM IST
 
 jobs:
   release-date-check:
@@ -64,8 +64,8 @@ jobs:
 
       - name: Initialize mandatory git config
         run: |
-          git config user.name "Release Engineering"
-          git config user.email releaseengineering.svc@hotstar.com
+          git config user.name "ayra98"
+          git config user.email aryamohan98@gmail.com
 
       - name: Create release branch
         run: |
