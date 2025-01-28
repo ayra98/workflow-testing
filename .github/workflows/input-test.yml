@@ -28,4 +28,4 @@ jobs:
           echo "HOTFIX (input): ${{ github.event.inputs.HOTFIX }}"
       
       - name: Start Multibuild pipeline for release build
-        run: cd scripts && ./run.sh
+        run: . cd scripts && ./run.sh
