@@ -14,11 +14,20 @@ on:
         type: 'string'
         default: 'false'
   schedule:
-    - cron: '55 04 * * *' # Every day at 10:25 AM IST
+    - cron: '20 04 * * *' # Every day at 10:25 AM IST
 
 jobs:
   log-inputs:
     runs-on: ubuntu-latest
+    env:
+      BUILD_ENV: prod
+      BUILD_TYPE: dogfood
+      UPLOAD_TO_PLAYSTORE: false
+      FIRESTORE_ENABLED: false
+      BUILD_BUSINESS: In Mea Ph Sea Hsi
+    outputs:
+      BRANCH: ${{ steps.set-outputs.outputs.BRANCH }}
+      BUILD_BUSINESS: ${{ steps.set-outputs.outputs.BUILD_BUSINESS }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -29,6 +38,14 @@ jobs:
           echo "Event Name: ${{ github.event_name }}"
           echo "BUILD_BUSINESS (input): ${{ github.event.inputs.BUILD_BUSINESS }}"
           echo "HOTFIX (input): ${{ github.event.inputs.HOTFIX }}"
+          echo "BUILD_BUSINESS (env): ${{ env.BUILD_BUSINESS }}"
+          echo "BUILD_BUSINESS (env2): $BUILD_BUSINESS"
+
+      - name: Set outputs
+        id: set-outputs
+        run: |
+          echo "BRANCH=$BRANCH" >> $GITHUB_OUTPUT
+          echo "BUILD_BUSINESS=$BUILD_BUSINESS" >> $GITHUB_OUTPUT
 
       - name: Print Working Directory
         run: pwd
@@ -38,3 +55,12 @@ jobs:
 
       - name: Start Multibuild pipeline for release build
         run: cd ./scripts && ./run.sh
+
+  test-inputs: 
+    needs: [log-inputs]
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Set environment name
+        run: |
+          echo "BRANCH=${{ needs.log-inputs.outputs.BRANCH }}" >> $GITHUB_ENV
+          echo "BUILD_BUSINESS=${{ needs.log-inputs.outputs.BUILD_BUSINESS }}" >> $GITHUB_ENV
