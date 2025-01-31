@@ -18,8 +18,6 @@ on:
         required: false
         type: 'string'
         default: false
-  schedule:
-    - cron: '33 03 * * *' # Every Monday at 9:02 AM IST
 
 jobs:
   release-date-check:
