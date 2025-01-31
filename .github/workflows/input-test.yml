@@ -13,13 +13,14 @@ on:
         required: false
         type: 'string'
         default: 'In Mea Ph Sea Hsi'
+        # If modifying `BUILD_BUSINESS`, update this value and also update the value in `build-dogfood` job (env.BUILD_BUSINESS).
       HOTFIX:
         description: 'Hotfix Build Generation?'
         required: false
         type: 'string'
         default: 'false'
   schedule:
-    - cron: '35 04 * * *'
+    - cron: '45 04 * * *'
 
 jobs:
   log-inputs:
@@ -30,6 +31,7 @@ jobs:
       UPLOAD_TO_PLAYSTORE: false
       FIRESTORE_ENABLED: false
       BUILD_BUSINESS: In Mea Ph Sea Hsi
+      # If modifying `BUILD_BUSINESS`, update this value and also update the `workflow_dispatch` default value above.
     outputs:
       BRANCH: ${{ steps.set-outputs.outputs.BRANCH }}
       BUILD_BUSINESS: ${{ steps.set-outputs.outputs.BUILD_BUSINESS }}
