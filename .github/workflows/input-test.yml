@@ -19,7 +19,7 @@ on:
         type: 'string'
         default: 'false'
   schedule:
-    - cron: '23 04 * * *' # Every day at 10:25 AM IST
+    - cron: '27 04 * * *' # Every day at 10:25 AM IST
 
 jobs:
   log-inputs:
