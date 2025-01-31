@@ -3,6 +3,11 @@ name: Log Inputs Workflow
 on:
   workflow_dispatch:
     inputs:
+      Create_Branch:
+        description: 'Create Release branch?'
+        required: false
+        type: boolean
+        default: false
       BUILD_BUSINESS:
         description: 'Build Business one of In Mea Ph Sea Hsi'
         required: false
@@ -14,7 +19,7 @@ on:
         type: 'string'
         default: 'false'
   schedule:
-    - cron: '20 04 * * *' # Every day at 10:25 AM IST
+    - cron: '23 04 * * *' # Every day at 10:25 AM IST
 
 jobs:
   log-inputs:
@@ -40,6 +45,18 @@ jobs:
           echo "HOTFIX (input): ${{ github.event.inputs.HOTFIX }}"
           echo "BUILD_BUSINESS (env): ${{ env.BUILD_BUSINESS }}"
           echo "BUILD_BUSINESS (env2): $BUILD_BUSINESS"
+
+
+      - name: Set environment name from UI
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.Create_Branch }}
+        run: |
+          echo "BUILD_BUSINESS=${{ github.event.inputs.BUILD_BUSINESS }}" >> $GITHUB_ENV
+
+      - name: Set environment name from UI
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.Create_Branch }}
+        run: |
+          echo "BRANCH=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+          echo "BUILD_BUSINESS=${{ github.event.inputs.BUILD_BUSINESS }}" >> $GITHUB_ENV
 
       - name: Set outputs
         id: set-outputs
