@@ -83,3 +83,11 @@ jobs:
         run: |
           echo "BRANCH=${{ needs.log-inputs.outputs.BRANCH }}" >> $GITHUB_ENV
           echo "BUILD_BUSINESS=${{ needs.log-inputs.outputs.BUILD_BUSINESS }}" >> $GITHUB_ENV
+
+  run-regression-test:
+    #    if: ${{ always() && (contains(join(needs.*.result, ','), 'success') && (github.event_name == 'workflow_dispatch' && inputs.Create_Branch)) || github.event_name == 'schedule' }}
+    if: ${{ always() && (contains(join(needs.*.result, ','), 'success') && ((github.event_name == 'workflow_dispatch')) || github.event_name == 'schedule' )}}
+    needs: [ test-inputs ]
+    uses: workflow-testing/master/.github/workflows/regression-release-test.yml@master
+    with:
+      BRANCH_NAME: '${GITHUB_REF_NAME}'

@@ -1,0 +1,138 @@
+name: regression_release
+on:
+
+  pull_request:
+    branches:
+      - 'release*'
+
+  workflow_dispatch:
+    inputs:
+      BUILD_ENV:
+        description: 'env one of qa dev preprod prod'
+        required: false
+        type: string
+        default: 'prod'
+      BUILD_TYPE:
+        description: 'Build Type one of debug release dogfood'
+        required: false
+        type: string
+        default: 'debug'
+      BUILD_BUSINESS:
+        description: 'Build Business one of In Mea Ph Sea'
+        required: false
+        type: 'string'
+        default: 'In'
+      CLASSNAME:
+        description: 'Test class or test package name'
+        required: false
+        type: 'string'
+        default: 'suites.ReleaseRegressionSuite'
+      COUNTRY:
+        description: 'Specify country code in za'
+        required: false
+        type: 'string'
+        default: 'in'
+      PACKAGE_NAME:
+        description: 'Specify package name if country is other than India'
+        required: false
+        type: 'string'
+        default: 'in.startv.hotstar'
+      ANNOTATIONS:
+        description: 'Add tags to run specific set of tests e.g @Leak (use fully quality name)'
+        required: false
+        type: 'string'
+        default: 'com.hotstar.annotations.ReleaseRegression'
+      POD_NAME:
+        description: 'Add name of your pod or JIRA ticket details'
+        required: false
+        type: 'string'
+        default: 'Release X Regression'
+      DEVICE_GROUP_ID:
+        description: 'Device Group IDs'
+        required: false
+        type: 'string'
+        default: '66ec40f2baec730559d582c4'
+
+  workflow_call:
+    inputs:
+      BRANCH_NAME:
+        description: 'specify branch name'
+        required: false
+        type: 'string'
+        default: ${{ github.ref_name }}
+      BUILD_ENV:
+        description: 'Build Env one of qa dev preprod prod'
+        required: false
+        type: string
+        default: 'prod'
+      BUILD_TYPE:
+        description: 'Build Type one of debug release dogfood'
+        required: false
+        type: string
+        default: 'debug'
+      BUILD_BUSINESS:
+        description: 'Build Business one of In Mea Ph Sea'
+        required: false
+        type: 'string'
+        default: 'In'
+      CLASSNAME:
+        description: 'Test class or test package name'
+        required: false
+        type: 'string'
+        default: 'suites.ReleaseRegressionSuite'
+      COUNTRY:
+        description: 'Specify country code in za'
+        required: false
+        type: 'string'
+        default: 'in'
+      PACKAGE_NAME:
+        description: 'Specify package name if country is other than India'
+        required: false
+        type: 'string'
+        default: 'in.startv.hotstar'
+      ANNOTATIONS:
+        description: 'Add tags to run specific set of tests e.g @Leak (use fully quality name)'
+        required: false
+        type: 'string'
+        default: 'com.hotstar.annotations.Sports'
+      POD_NAME:
+        description: 'Add name of your pod or JIRA ticket details'
+        required: false
+        type: 'string'
+        default: 'RL-2309 Test'
+      DEVICE_GROUP_ID:
+        description: 'Device Group IDs'
+        required: false
+        type: 'string'
+        default: '66ec40f2baec730559d582c4'
+
+jobs:
+  log-inputs:
+    runs-on: ubuntu-latest
+    env:
+      BUILD_ENV: prod
+      BUILD_TYPE: dogfood
+      UPLOAD_TO_PLAYSTORE: false
+      FIRESTORE_ENABLED: false
+      BUILD_BUSINESS: In
+      # If modifying `BUILD_BUSINESS`, update this value and also update the `workflow_dispatch` default value above.
+    steps:
+
+       - name: Log All Inputs
+         run: |
+            echo "Logging All Inputs:"
+            echo "Event Name: ${{ github.event_name }}"
+            echo "BRANCH_NAME: ${{ github.event.inputs.BRANCH_NAME }}"
+            echo "BUILD_ENV: ${{ github.event.inputs.BUILD_ENV }}"
+            echo "BUILD_TYPE: ${{ github.event.inputs.BUILD_TYPE }}"
+            echo "BUILD_BUSINESS: ${{ github.event.inputs.BUILD_BUSINESS }}"
+            echo "CLASSNAME: ${{ github.event.inputs.CLASSNAME }}"
+            echo "COUNTRY: ${{ github.event.inputs.COUNTRY }}"
+            echo "PACKAGE_NAME: ${{ github.event.inputs.PACKAGE_NAME }}"
+            echo "ANNOTATIONS: ${{ github.event.inputs.ANNOTATIONS }}"
+            echo "POD_NAME: ${{ github.event.inputs.POD_NAME }}"
+            echo "DEVICE_GROUP_ID: ${{ github.event.inputs.DEVICE_GROUP_ID }}"
+            echo "Environment Variables:"
+            echo "BUILD_ENV (env): ${{ env.BUILD_ENV }}"
+            echo "BUILD_TYPE (env): ${{ env.BUILD_TYPE }}"
+            echo "BUILD_BUSINESS (env): ${{ env.BUILD_BUSINESS }}"
