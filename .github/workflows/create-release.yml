@@ -89,3 +89,5 @@ jobs:
     if: ${{ always() && (contains(join(needs.*.result, ','), 'success') && ((github.event_name == 'workflow_dispatch')) || github.event_name == 'schedule' )}}
     needs: [ test-inputs ]
     uses: ayra98/workflow-testing/.github/workflows/regression-release-test.yml@master
+    with:
+      BRANCH_NAME: '${GITHUB_REF_NAME}'
