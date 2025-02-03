@@ -109,20 +109,13 @@ on:
 jobs:
   log-inputs:
     runs-on: ubuntu-latest
-    env:
-      BUILD_ENV: prod
-      BUILD_TYPE: dogfood
-      UPLOAD_TO_PLAYSTORE: false
-      FIRESTORE_ENABLED: false
-      BUILD_BUSINESS: In
-      # If modifying `BUILD_BUSINESS`, update this value and also update the `workflow_dispatch` default value above.
     steps:
 
        - name: Log All Inputs
          run: |
             echo "Logging All Inputs:"
             echo "Event Name: ${{ github.event_name }}"
-            echo "BRANCH_NAME: ${{ github.event.inputs.BRANCH_NAME }}"
+            echo "BRANCH_NAME: ${{ github.event.inputs.BRANCH_NAME || github.ref_name }}"
             echo "BUILD_ENV: ${{ github.event.inputs.BUILD_ENV }}"
             echo "BUILD_TYPE: ${{ github.event.inputs.BUILD_TYPE }}"
             echo "BUILD_BUSINESS: ${{ github.event.inputs.BUILD_BUSINESS }}"
@@ -132,7 +125,4 @@ jobs:
             echo "ANNOTATIONS: ${{ github.event.inputs.ANNOTATIONS }}"
             echo "POD_NAME: ${{ github.event.inputs.POD_NAME }}"
             echo "DEVICE_GROUP_ID: ${{ github.event.inputs.DEVICE_GROUP_ID }}"
-            echo "Environment Variables:"
-            echo "BUILD_ENV (env): ${{ env.BUILD_ENV }}"
-            echo "BUILD_TYPE (env): ${{ env.BUILD_TYPE }}"
-            echo "BUILD_BUSINESS (env): ${{ env.BUILD_BUSINESS }}"
+
