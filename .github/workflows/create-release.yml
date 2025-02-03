@@ -88,6 +88,6 @@ jobs:
     #    if: ${{ always() && (contains(join(needs.*.result, ','), 'success') && (github.event_name == 'workflow_dispatch' && inputs.Create_Branch)) || github.event_name == 'schedule' }}
     if: ${{ always() && (contains(join(needs.*.result, ','), 'success') && ((github.event_name == 'workflow_dispatch')) || github.event_name == 'schedule' )}}
     needs: [ test-inputs ]
-    uses: ayra98/workflow-testing/.github/workflows/regression-release-test.yml@master
+    uses: ./.github/workflows/regression-release-test.yml
     with:
       BRANCH_NAME: 'test'
