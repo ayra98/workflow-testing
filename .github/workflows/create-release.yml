@@ -1,4 +1,4 @@
-name: Create Release
+name: Create Release Workflow
 
 on:
   workflow_dispatch:
@@ -13,112 +13,45 @@ on:
         required: false
         type: 'string'
         default: 'In Mea Ph Sea Hsi'
+        # If modifying `BUILD_BUSINESS`, update this value and also update the value in `build-dogfood` job (env.BUILD_BUSINESS).
       HOTFIX:
-        description: 'Hotfix Build Generation? Only check when hotfix build generation is requried'
+        description: 'Hotfix Build Generation?'
         required: false
         type: 'string'
-        default: false
+        default: 'false'
+  schedule:
+    - cron: '45 04 * * *'
 
 jobs:
-  release-date-check:
-    runs-on: [hs-releng-action-runner]
-    outputs:
-      release-date: ${{steps.release-date-checker.outputs.release-date}}
-    steps:
-      - name: Debug Inputs for Release Date Check
-        run: |
-          echo "Debugging Inputs for Release Date Check:"
-          echo "GITHUB_EVENT_NAME=${{ github.event_name }}"
-          echo "GITHUB_REF_NAME=${{ github.ref_name }}"
-          echo "GITHUB_REF=${{ github.ref }}"
-          echo "INPUTS: Create_Branch=${{ inputs.Create_Branch }}, BUILD_BUSINESS=${{ inputs.BUILD_BUSINESS }}, HOTFIX=${{ inputs.HOTFIX }}"
-          echo "SCHEDULED_EVENT=${{ github.event.schedule }}"
-
-      - name: Run ReleaseDate Check
-        id: release-date-checker
-        run: |
-          baseDate="2023-03-27"
-          gapBetweenReleases=1 # days -> Signifying weekly-Release-cadence
-          today=$(date -u +%s)
-          start=$(date -u -d "$baseDate" +%s)
-          diff=$(( (today - start) / 86400 ))
-          if (( diff % $gapBetweenReleases == 0 )); then
-            echo "release-date=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "release-date=false" >> "$GITHUB_OUTPUT"
-            echo "today's not a release date, Exiting Workflow"
-            exit 1
-          fi
-
-  create-release:
-    needs: release-date-check
-    if: ${{ needs.release-date-check.outputs.release-date == 'true' && (inputs.Create_Branch && github.event_name == 'workflow_dispatch') || github.event_name == 'schedule' }}
-    runs-on: [hs-releng-action-runner]
-    outputs:
-      BRANCHNAME: ${{ steps.branch.outputs.BRANCHNAME }}
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Initialize mandatory git config
-        run: |
-          git config user.name "ayra98"
-          git config user.email aryamohan98@gmail.com
-
-      - name: Create release branch
-        run: |
-          BRANCH_NAME="release-$(date +%y-%m-%d)"
-          if git ls-remote --exit-code --heads origin $BRANCH_NAME; then
-            echo "Branch $BRANCH_NAME already exists on remote. Pulling latest changes..."
-            git fetch origin $BRANCH_NAME
-            git checkout $BRANCH_NAME
-            git pull origin $BRANCH_NAME
-          else
-            echo "Creating a new branch $BRANCH_NAME"
-            git checkout -b $BRANCH_NAME
-          fi
-
-      - name: Push new branch
-        run: git push origin $BRANCH_NAME
-
-      - name: Getting branch name
-        id: branch
-        run: echo "BRANCHNAME=$BRANCH_NAME" >> $GITHUB_OUTPUT
-
-  build-dogfood:
-    if: ${{ ( (always() && contains(join(needs.*.result, ','), 'success')) || github.event_name == 'workflow_dispatch') }}
-    needs: create-release
-    runs-on: [hs-releng-action-runner]
+  log-inputs:
+    runs-on: ubuntu-latest
     env:
       BUILD_ENV: prod
       BUILD_TYPE: dogfood
       UPLOAD_TO_PLAYSTORE: false
       FIRESTORE_ENABLED: false
+      BUILD_BUSINESS: In Mea Ph Sea Hsi
+      # If modifying `BUILD_BUSINESS`, update this value and also update the `workflow_dispatch` default value above.
     outputs:
       BRANCH: ${{ steps.set-outputs.outputs.BRANCH }}
       BUILD_BUSINESS: ${{ steps.set-outputs.outputs.BUILD_BUSINESS }}
     steps:
-      - name: Debug Inputs for Build Dogfood
-        run: |
-          echo "Debugging Inputs for Build Dogfood:"
-          echo "HOTFIX=${{ inputs.HOTFIX }}"
-          echo "BRANCH=${{ env.BRANCH }}"
-          echo "BUILD_BUSINESS=${{ env.BUILD_BUSINESS }}"
-          echo "INPUT BUILD_BUSINESS=${{ github.event.inputs.BUILD_BUSINESS }}"
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-      - name: Set Hotfix Env
+      - name: Log Inputs
         run: |
-          echo "HOTFIX=${{ inputs.HOTFIX }}" >> $GITHUB_ENV
-      - name: Set environment name
-        if: ${{ github.event_name == 'schedule' }}
-        run: |
-          echo "BRANCH=${{ needs.create-release.outputs.BRANCHNAME }}" >> $GITHUB_ENV
-          echo "BUILD_BUSINESS=In Mea Ph Sea Hsi" >> $GITHUB_ENV
+          echo "Logging Inputs:"
+          echo "Event Name: ${{ github.event_name }}"
+          echo "BUILD_BUSINESS (input): ${{ github.event.inputs.BUILD_BUSINESS }}"
+          echo "HOTFIX (input): ${{ github.event.inputs.HOTFIX }}"
+          echo "BUILD_BUSINESS (env): ${{ env.BUILD_BUSINESS }}"
+          echo "BUILD_BUSINESS (env2): $BUILD_BUSINESS"
+
 
       - name: Set environment name from UI
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.Create_Branch }}
         run: |
-          echo "BRANCH=${{ needs.create-release.outputs.BRANCHNAME }}" >> $GITHUB_ENV
           echo "BUILD_BUSINESS=${{ github.event.inputs.BUILD_BUSINESS }}" >> $GITHUB_ENV
 
       - name: Set environment name from UI
@@ -133,43 +66,26 @@ jobs:
           echo "BRANCH=$BRANCH" >> $GITHUB_OUTPUT
           echo "BUILD_BUSINESS=$BUILD_BUSINESS" >> $GITHUB_OUTPUT
 
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ env.BRANCH }}
+      - name: Print Working Directory
+        run: pwd
 
-      - name: Start pipeline for dogfood build
-        run: . fetch_config secret/non-prod/clients/multi-country-builds  && cd scripts && ./run.sh
-
-  build-release:
-    if: ${{ (always() && contains(join(needs.*.result, ','), 'success')) || github.event_name == 'workflow_dispatch' }}
-    needs: [create-release, build-dogfood]
-    runs-on: [hs-releng-action-runner]
-    env:
-      BUILD_ENV: prod
-      BUILD_TYPE: release
-      UPLOAD_TO_PLAYSTORE: true
-      FIRESTORE_ENABLED: false
-    steps:
-      - name: Debug Inputs for Build Release
-        run: |
-          echo "Debugging Inputs for Build Release:"
-          echo "HOTFIX=${{ inputs.HOTFIX }}"
-          echo "BRANCH=${{ needs.build-dogfood.outputs.BRANCH }}"
-          echo "BUILD_BUSINESS=${{ needs.build-dogfood.outputs.BUILD_BUSINESS }}"
-
-      - name: Set Hotfix Env
-        run: |
-          echo "HOTFIX=${{ inputs.HOTFIX }}" >> $GITHUB_ENV
-      - name: Set environment name
-        run: |
-          echo "BRANCH=${{ needs.build-dogfood.outputs.BRANCH }}" >> $GITHUB_ENV
-          echo "BUILD_BUSINESS=${{ needs.build-dogfood.outputs.BUILD_BUSINESS }}" >> $GITHUB_ENV
-
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ env.BRANCH }}
+      - name: List Files
+        run: ls -R
 
       - name: Start Multibuild pipeline for release build
-        run: . fetch_config secret/non-prod/clients/multi-country-builds  && cd scripts && ./run.sh
+        run: cd ./scripts && ./run.sh
+
+  test-inputs: 
+    needs: [log-inputs]
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Set environment name
+        run: |
+          echo "BRANCH=${{ needs.log-inputs.outputs.BRANCH }}" >> $GITHUB_ENV
+          echo "BUILD_BUSINESS=${{ needs.log-inputs.outputs.BUILD_BUSINESS }}" >> $GITHUB_ENV
+
+  run-regression-test:
+    #    if: ${{ always() && (contains(join(needs.*.result, ','), 'success') && (github.event_name == 'workflow_dispatch' && inputs.Create_Branch)) || github.event_name == 'schedule' }}
+    if: ${{ always() && (contains(join(needs.*.result, ','), 'success') && ((github.event_name == 'workflow_dispatch')) || github.event_name == 'schedule' )}}
+    needs: [ test-inputs ]
+    uses: ayra98/workflow-testing/.github/workflows/regression-release-test.yml@master
