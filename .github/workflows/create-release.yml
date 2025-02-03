@@ -90,4 +90,4 @@ jobs:
     needs: [ test-inputs ]
     uses: ayra98/workflow-testing/.github/workflows/regression-release-test.yml@master
     with:
-      BRANCH_NAME: '${GITHUB_REF_NAME}'
+      BRANCH_NAME: 'test'
