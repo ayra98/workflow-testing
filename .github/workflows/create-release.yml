@@ -86,7 +86,7 @@ jobs:
 
   run-regression-test:
     #    if: ${{ always() && (contains(join(needs.*.result, ','), 'success') && (github.event_name == 'workflow_dispatch' && inputs.Create_Branch)) || github.event_name == 'schedule' }}
-    if: ${{ always() && (contains(join(needs.*.result, ','), 'success') && ((github.event_name == 'workflow_dispatch')) || github.event_name == 'schedule' )}}
+    if: ${{ (always() && contains(join(needs.*.result, ','), 'success')) && ((github.event_name == 'workflow_dispatch') || github.event_name == 'schedule' )}}
     needs: [ test-inputs ]
     uses: ./.github/workflows/regression-release-test.yml
     with:
