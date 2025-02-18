@@ -1,0 +1,54 @@
+name: ci
+
+on:
+  workflow_dispatch:
+    inputs:
+      BUILD_ENV:
+        description: 'Build Env one of qa dev preprod prod'
+        required: false
+        type: string
+        default: 'dev'
+      BUILD_TYPE:
+        description: 'Build Type one of debug release dogfood'
+        required: false
+        type: string
+        default: 'debug'
+      BUILD_BUSINESS:
+        description: 'Build Business one of In Mea Ph Sea Hsi'
+        required: false
+        type: string
+        default: 'Mea'
+      FIREBASE_TEST_GROUP:
+        description: 'Firebase distribution group'
+        required: false
+        type: string
+        default: 'hotstar-engineering'
+      UPLOAD_TO_PLAYSTORE:
+        description: 'Upload package to play store true or false'
+        required: false
+        type: string
+        default: 'false'
+      REPETATIVE_BUILD_CHECK:
+        description: "Check for repetitive build request"
+        required: false
+        type: boolean
+        default: true
+      HOTFIX:
+        description: 'Hotfix Build Generation? Only check when hotfix build generation is required'
+        required: false
+        type: string
+        default: 'false'
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log input values
+        run: |
+          echo "BUILD_ENV: ${{ github.event.inputs.BUILD_ENV }}"
+          echo "BUILD_TYPE: ${{ github.event.inputs.BUILD_TYPE }}"
+          echo "BUILD_BUSINESS: ${{ github.event.inputs.BUILD_BUSINESS }}"
+          echo "FIREBASE_TEST_GROUP: ${{ github.event.inputs.FIREBASE_TEST_GROUP }}"
+          echo "UPLOAD_TO_PLAYSTORE: ${{ github.event.inputs.UPLOAD_TO_PLAYSTORE }}"
+          echo "REPETATIVE_BUILD_CHECK: ${{ github.event.inputs.REPETATIVE_BUILD_CHECK }}"
+          echo "HOTFIX: ${{ github.event.inputs.HOTFIX }}"

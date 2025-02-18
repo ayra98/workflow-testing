@@ -19,7 +19,9 @@ on:
        required: false
        type: 'string'
        default: 'false'
-
+       
+ schedule:
+   - cron: '5 7 * * *'  
 
 jobs:
  release-date-check:
@@ -96,7 +98,11 @@ jobs:
          ref: ${{ env.BRANCH }}
 
      - name: Start pipeline for dogfood build
-       run: cd scripts && ./run.sh
+       env:
+         REGITTOKEN: ${{ secrets.PAT_TOKEN }}
+       run: |
+         cd scripts
+         ./run.sh
 
 
 #  bump-version:
