@@ -16,10 +16,6 @@ jobs:
    steps:
    - name: Check out code
      uses: actions/checkout@v4
-   - name: Initialize mandatory git config
-     run: |
-      git config user.name "ayra98"
-      git config user.email aryamohan98@gmail.com
    - name: Create release branch
      run: |
        BRANCH_NAME="release-$(date +%y-%m-%d)"
