@@ -27,7 +27,7 @@ do
    do
      echo "Build Env is :- " + $buildEnv
      echo $buildType | awk '{gsub(/^ +| +$/,"")}1'
-     curl --location --request POST 'https://api.github.com/repos/hotstar/hotstar-android-mobile/actions/workflows/29366532/dispatches' \
+     curl --location --request POST 'https://api.github.com/repos/ayra98/workflow-testing/actions/workflows/ci.yml/dispatches' \
        --header 'Accept: application/vnd.github.v3+json' \
        --header "Authorization: $credentials" \
        --header 'Content-Type: application/json' \
