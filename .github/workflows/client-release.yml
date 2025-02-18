@@ -16,6 +16,11 @@ jobs:
    steps:
    - name: Check out code
      uses: actions/checkout@v4
+     with:
+          # Use a PAT if needed:
+          # token: ${{ secrets.PAT_TOKEN }}
+          persist-credentials: true
+
    - name: Create release branch
      run: |
        BRANCH_NAME="release-$(date +%y-%m-%d)"
