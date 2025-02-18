@@ -26,8 +26,8 @@ jobs:
        BRANCH_NAME="release-$(date +%y-%m-%d)"
        if git ls-remote --exit-code --heads origin $BRANCH_NAME; then
          echo "Branch $BRANCH_NAME already exists on remote. Pulling latest changes..."
-         git checkout $BRANCH_NAME
          git pull origin $BRANCH_NAME
+         git checkout $BRANCH_NAME
        else
          echo "Creating a new branch $BRANCH_NAME"
          git checkout -b $BRANCH_NAME
