@@ -16,6 +16,7 @@ echo "Repetitive Build Check: $repetativeBuildCheck"
 echo "Hotfix: $hotfix"
 echo "=============================="
 
+echo "test"
 
 for buildBusiness in "${buildBusinessList[@]}";
 do
