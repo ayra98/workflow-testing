@@ -17,32 +17,22 @@ echo "Hotfix: $hotfix"
 echo "=============================="
 
 
-for buildBusiness in "${buildBusinessList[@]}"; do
-  echo "Build Business is: $buildBusiness"
-  for buildType in "${buildTypes[@]}"; do
-    echo "Build Type is: $buildType"
-    for buildEnv in "${buildEnvs[@]}"; do
-      echo "Build Env is: $buildEnv"
-      
-      # Optionally trim whitespace from buildType if needed
-      trimmedBuildType=$(echo "$buildType" | awk '{gsub(/^ +| +$/,"")}1')
-      
-      # Dispatch event to the new workflow (ci.yml) in the ayra98/workflow-testing repository
-      curl --location --request POST 'https://api.github.com/repos/ayra98/workflow-testing/actions/workflows/ci.yml/dispatches' \
-        --header 'Accept: application/vnd.github.v3+json' \
-        --header "Authorization: $credentials" \
-        --header 'Content-Type: application/json' \
-        --data-raw '{
-          "ref": "'"$BRANCH"'",
-          "inputs": {
-            "BUILD_ENV": "'"$buildEnv"'",
-            "BUILD_TYPE": "'"$trimmedBuildType"'",
-            "BUILD_BUSINESS": "'"$buildBusiness"'",
-            "UPLOAD_TO_PLAYSTORE": "'"$upload_to_playstore"'",
-            "REPETATIVE_BUILD_CHECK": "'"$repetativeBuildCheck"'",
-            "HOTFIX": "'"$hotfix"'"
-          }
-        }'
-    done
-  done
+for buildBusiness in "${buildBusinessList[@]}";
+do
+ echo "Build Business is :- " $buildBusiness
+ for buildType in "${buildTypes[@]}";
+ do
+   echo "Build Type is :- " + $buildType
+   for buildEnv in "${buildEnvs[@]}";
+   do
+     echo "Build Env is :- " + $buildEnv
+     echo $buildType | awk '{gsub(/^ +| +$/,"")}1'
+     curl --location --request POST 'https://api.github.com/repos/hotstar/hotstar-android-mobile/actions/workflows/29366532/dispatches' \
+       --header 'Accept: application/vnd.github.v3+json' \
+       --header "Authorization: $credentials" \
+       --header 'Content-Type: application/json' \
+       --data-raw '{"ref": "'"$BRANCH"'", "inputs": {"BUILD_ENV": "'$buildEnv'", "BUILD_TYPE": "'$buildType'", "BUILD_BUSINESS": "'$buildBusiness'" , "UPLOAD_TO_PLAYSTORE": "'$upload_to_playstore'" , "REPETATIVE_BUILD_CHECK": "'$repetativeBuildCheck'" , "HOTFIX": "'$hotfix'"}}'
+   done
+ done
 done
+
