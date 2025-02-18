@@ -21,7 +21,7 @@ on:
        default: 'false'
        
  schedule:
-    - cron: '32 6 * * *'  # This runs at 06:32 UTC, which is 12:02 PM IST
+   - cron: '5 7 * * *'  
 
 jobs:
  release-date-check:
