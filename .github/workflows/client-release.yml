@@ -16,16 +16,13 @@ jobs:
    steps:
    - name: Check out code
      uses: actions/checkout@v4
-     with:
-          # Use a PAT if needed:
-          # token: ${{ secrets.PAT_TOKEN }}
-          persist-credentials: true
 
    - name: Create release branch
      run: |
        BRANCH_NAME="release-$(date +%y-%m-%d)"
        if git ls-remote --exit-code --heads origin $BRANCH_NAME; then
          echo "Branch $BRANCH_NAME already exists on remote. Pulling latest changes..."
+         git config pull.rebase false
          git pull origin $BRANCH_NAME
          git checkout $BRANCH_NAME
        else
