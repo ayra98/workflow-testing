@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       BUILD_ENV:
-        description: 'env one of qa dev preprod prod'
+        description: 'Build Env one of qa dev preprod prod'
         required: false
         type: string
         default: 'prod'
@@ -94,18 +94,17 @@ on:
         description: 'Add tags to run specific set of tests e.g @Leak (use fully quality name)'
         required: false
         type: 'string'
-        default: 'com.hotstar.annotations.Sports'
+        default: 'com.hotstar.annotations.ReleaseRegression'
       POD_NAME:
         description: 'Add name of your pod or JIRA ticket details'
         required: false
         type: 'string'
-        default: 'RL-2309 Test'
+        default: 'Release X Regression'
       DEVICE_GROUP_ID:
         description: 'Device Group IDs'
         required: false
         type: 'string'
         default: '66ec40f2baec730559d582c4'
-
 jobs:
   log-inputs:
     runs-on: ubuntu-latest
