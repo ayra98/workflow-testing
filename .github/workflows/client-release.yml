@@ -19,19 +19,18 @@ jobs:
 
    - name: Create release branch
      run: |
-       BRANCH_NAME="release-$(date +%y-%m-%d)"
-       if git ls-remote --exit-code --heads origin $BRANCH_NAME; then
-         echo "Branch $BRANCH_NAME already exists on remote. Pulling latest changes..."
-         # git config pull.rebase false
-         # git pull origin $BRANCH_NAME
-         # git checkout $BRANCH_NAME
-       else
-         echo "Creating a new branch $BRANCH_NAME"
-         git checkout -b $BRANCH_NAME
-         git push origin release-`date +%y-%m-%d`
-       fi
-   # - name: Push new branch
-   #   run: git push origin release-`date +%y-%m-%d`
+        BRANCH_NAME="release-$(date +%y-%m-%d)"
+        if git ls-remote --exit-code --heads origin $BRANCH_NAME; then
+          echo "Branch $BRANCH_NAME already exists on remote. Pulling latest changes..."
+          git fetch origin $BRANCH_NAME
+          git checkout $BRANCH_NAME
+          git pull origin $BRANCH_NAME
+        else
+          echo "Creating a new branch $BRANCH_NAME"
+          git checkout -b $BRANCH_NAME
+        fi
+   - name: Push new branch
+     run: git push origin release-`date +%y-%m-%d`
    - name: Getting branch name 
      id: branch
      run: echo "BRANCHNAME=release-`date +%y-%m-%d`" >> $GITHUB_OUTPUT

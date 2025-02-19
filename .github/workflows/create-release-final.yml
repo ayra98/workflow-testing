@@ -21,7 +21,7 @@ on:
        default: 'false'
        
  schedule:
-   - cron: '5 7 * * *'  
+   - cron: '55 3 * * *'
 
 jobs:
  release-date-check:
@@ -147,9 +147,9 @@ jobs:
      run: cd scripts && ./run.sh
 
 
-#  run-regression-test:
-#    if: ${{ (always() && contains(join(needs.*.result, ','), 'success')) && ((github.event_name == 'workflow_dispatch' && inputs.Create_Branch) || github.event_name == 'schedule' )}}
-#    needs: [ build-dogfood, build-release ]
-#    uses: ./.github/workflows/regression-release-test.yml
-#    with:
-#      BRANCH_NAME: '${{ needs.build-dogfood.outputs.BRANCH }}'
+ run-regression-test:
+   if: ${{ (always() && contains(join(needs.*.result, ','), 'success')) && ((github.event_name == 'workflow_dispatch' && inputs.Create_Branch) || github.event_name == 'schedule' )}}
+   needs: [ build-dogfood, build-release ]
+   uses: ./.github/workflows/regression-release-test.yml
+   with:
+     BRANCH_NAME: '${{ needs.build-dogfood.outputs.BRANCH }}'
