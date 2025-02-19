@@ -1,4 +1,4 @@
-name: Create Release Final
+name: Create Release
 
 on:
  workflow_dispatch:
@@ -20,8 +20,8 @@ on:
        type: 'string'
        default: 'false'
        
- schedule:
-   - cron: '55 3 * * *'
+schedule:
+  - cron: '10 4 * * *'
 
 jobs:
  release-date-check:
