@@ -21,7 +21,7 @@ on:
        default: 'false'
        
  schedule:
-   - cron: '5 7 * * *'  
+   - cron: '55 3 * * *'
 
 jobs:
  release-date-check:
