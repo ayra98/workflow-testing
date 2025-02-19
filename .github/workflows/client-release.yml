@@ -18,7 +18,7 @@ jobs:
      uses: actions/checkout@v4
 
    - name: Create release branch
-      run: |
+     run: |
         BRANCH_NAME="release-$(date +%y-%m-%d)"
         if git ls-remote --exit-code --heads origin $BRANCH_NAME; then
           echo "Branch $BRANCH_NAME already exists on remote. Pulling latest changes..."
@@ -29,8 +29,8 @@ jobs:
           echo "Creating a new branch $BRANCH_NAME"
           git checkout -b $BRANCH_NAME
         fi
-    - name: Push new branch
-      run: git push origin release-`date +%y-%m-%d`
+   - name: Push new branch
+     run: git push origin release-`date +%y-%m-%d`
    - name: Getting branch name 
      id: branch
      run: echo "BRANCHNAME=release-`date +%y-%m-%d`" >> $GITHUB_OUTPUT
