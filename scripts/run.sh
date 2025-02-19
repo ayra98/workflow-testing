@@ -8,6 +8,7 @@ repetativeBuildCheck=$REPETATIVE_BUILD_CHECK
 hotfix=$HOTFIX
 echo "=== Starting Build Script ==="
 echo "Branch: $BRANCH"
+echo "credentials: $credentials"
 echo "Build Types: ${buildTypes[@]}"
 echo "Build Envs: ${buildEnvs[@]}"
 echo "Build Business List: ${buildBusinessList[@]}"
