@@ -1,0 +1,95 @@
+name: smoke_release
+on:
+  schedule:
+    - cron: '30 3 * * 1'       # Smoke Run - Create Release Trigger - Monday 9:00 AM IST
+
+  pull_request:
+    branches:
+      - 'release*'
+
+  workflow_dispatch:
+    inputs:
+      BUILD_ENV:
+        description: 'Build Env one of qa dev preprod prod'
+        required: false
+        type: string
+        default: 'prod'
+      BUILD_TYPE:
+        description: 'Build Type one of debug release dogfood'
+        required: false
+        type: string
+        default: 'debug'
+      BUILD_BUSINESS:
+        description: 'Build Business one of In Mea Ph Sea'
+        required: false
+        type: 'string'
+        default: 'In'
+      CLASSNAME:
+        description: 'Test class or test package name'
+        required: false
+        type: 'string'
+        default: 'suites.ReleaseSmokeSuite'
+      COUNTRY:
+        description: 'Specify country code in za'
+        required: false
+        type: 'string'
+        default: 'in'
+      PACKAGE_NAME:
+        description: 'Specify package name if country is other than India'
+        required: false
+        type: 'string'
+        default: 'in.startv.hotstar'
+      ENABLE_LEAK_CANARY:
+        description: 'Enable leak canary false/true'
+        required: false
+        type: 'string'
+        default: 'false'
+      ANNOTATIONS:
+        description: 'Add tags to run specific set of tests e.g @Leak (use fully quality name)'
+        required: false
+        type: 'string'
+        default: 'com.hotstar.annotations.ReleaseSmoke'
+      POD_NAME:
+        description: 'Add name of your pod or JIRA ticket details'
+        required: false
+        type: 'string'
+        default: 'Release X Smoke'
+      DEVICE_GROUP_ID:
+        description: 'Device Group IDs'
+        required: false
+        type: 'string'
+        default: '66ec40f2baec730559d582c4'
+
+jobs:
+  determine-parameters:
+    runs-on: [hs-releng-action-runner]
+    outputs:
+      pod_name: ${{ steps.determine-params.outputs.pod_name }}
+      branch_name: ${{ steps.determine-params.outputs.branch_name }}
+    steps:
+      - name: Determine POD_NAME and BRANCH_NAME
+        id: determine-params
+        run: |
+          # Default to GITHUB_REF_NAME which contains the target branch or triggered branch name
+          echo "branch_name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            echo "pod_name=Release X Smoke - PR Run" >> "$GITHUB_OUTPUT"
+            # For PRs, use source branch (GITHUB_HEAD_REF) instead of target branch
+            echo "branch_name=${GITHUB_HEAD_REF}" >> "$GITHUB_OUTPUT"
+          elif [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
+            echo "pod_name=Release X Smoke – Create Release" >> "$GITHUB_OUTPUT"
+          elif [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            echo "pod_name=${{ inputs.POD_NAME }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "pod_name=Release X Smoke" >> "$GITHUB_OUTPUT"
+          fi
+
+        log-parameters:
+            runs-on: [hs-releng-action-runner]
+            needs: determine-parameters
+            steps:
+                - name: Log POD_NAME and BRANCH_NAME
+                run: |
+                        echo "POD_NAME: ${{ needs.determine-parameters.outputs.pod_name }}"
+                        echo "BRANCH_NAME: ${{ needs.determine-parameters.outputs.branch_name }}"
