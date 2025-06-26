@@ -62,7 +62,7 @@ on:
 
 jobs:
   determine-parameters:
-    runs-on: [hs-releng-action-runner]
+    runs-on: ubuntu-latest
     outputs:
       pod_name: ${{ steps.determine-params.outputs.pod_name }}
       branch_name: ${{ steps.determine-params.outputs.branch_name }}
@@ -85,11 +85,11 @@ jobs:
             echo "pod_name=Release X Smoke" >> "$GITHUB_OUTPUT"
           fi
 
-        log-parameters:
-            runs-on: [hs-releng-action-runner]
-            needs: determine-parameters
-            steps:
+  log-parameters:
+        runs-on: ubuntu-latest
+        needs: determine-parameters
+        steps:
                 - name: Log POD_NAME and BRANCH_NAME
-                run: |
+                  run: |
                         echo "POD_NAME: ${{ needs.determine-parameters.outputs.pod_name }}"
                         echo "BRANCH_NAME: ${{ needs.determine-parameters.outputs.branch_name }}"
